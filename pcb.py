@@ -49,8 +49,7 @@ def main():
 		track = literal_eval(line.strip())
 		if not track:
 			break
-		width, net = track
-		pcb.pcb_add_net(net, width)
+		pcb.pcb_add_track(track)
 	args.infile.close()
 
 	pcb.pcb_print()

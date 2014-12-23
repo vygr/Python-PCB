@@ -104,8 +104,9 @@ class Pcb():
 	def pcb_unmark_distances(self):
 		self.nodes = array('i', [x if x <= UNUSED else UNUSED for x in self.nodes])
 
-	def pcb_add_net(self, terminals, radius):
-		self.netlist.append(Net(terminals, radius, self))
+	def pcb_add_track(self, track):
+		radius, net = track
+		self.netlist.append(Net(net, radius, self))
 
 	def pcb_route(self, timeout):
 		now = time.time()
