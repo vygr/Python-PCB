@@ -68,7 +68,7 @@ def main():
 	if best_pcb != None:
 		best_pcb.pcb_print_netlist()
 	else:
-		print ()
+		print []
 
 if __name__ == '__main__':
 	main()
