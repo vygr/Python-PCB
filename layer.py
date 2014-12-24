@@ -20,10 +20,16 @@ class Layer():
 		miny = int(math.floor((y1 - r) * self.scale))
 		maxx = int(math.ceil((x2 + r) * self.scale))
 		maxy = int(math.ceil((y2 + r) * self.scale))
-		if maxx - minx > self.width:
-			maxx = minx + self.width
-		if maxy - miny > self.height:
-			maxy = miny + self.height
+		if minx < 0:
+			minx = 0
+		if miny < 0:
+			miny = 0
+		if maxx > self.width:
+			maxx = self.width
+		if maxy > self.height:
+			maxy = self.height
+		if minx > maxx or miny > maxy:
+			Exit(20)
 		return (minx, miny, maxx, maxy)
 
 	def all_buckets(self, aabb):
