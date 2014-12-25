@@ -141,7 +141,7 @@ def main():
 
 	parser = argparse.ArgumentParser(description = 'Pcb layout viewer.')
 	parser.add_argument('infile', nargs = '?', type = argparse.FileType('r'), default = sys.stdin, help = 'filename, default stdin')
-	parser.add_argument('--s', nargs = 1, type = int, default = [10], help = 'scale factor, default 10')
+	parser.add_argument('--s', nargs = 1, type = int, default = [9], help = 'scale factor, default 9')
 	parser.add_argument('--f', nargs = 1, type = float, default = [100.0], help = 'framerate, default 100.0')
 	parser.add_argument('--i', nargs = 1, default = ['pcb.png'], help = 'filename, default pcb.png')
 	parser.add_argument('--o', nargs = 1, type = int, default = [0], choices=range(0, 2), help = 'overlay modes 0..1, default 0')
