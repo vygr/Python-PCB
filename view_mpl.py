@@ -7,7 +7,6 @@ from ast import literal_eval
 from itertools import izip, islice, chain
 from mymath import *
 
-import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.path as path
