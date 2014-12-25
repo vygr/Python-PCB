@@ -107,6 +107,8 @@ class Pcb():
 		self.netlist.append(Net(net, radius, self))
 
 	def route(self, timeout):
+		self.remove_netlist()
+		self.unmark_distances()
 		now = time.time()
 		self.netlist.sort(key = lambda i: i.radius, reverse = True)
 		index = 0
@@ -145,6 +147,10 @@ class Pcb():
 			net.remove()
 			net.shuffle_topology()
 		shuffle(self.netlist)
+
+	def remove_netlist(self):
+		for net in self.netlist:
+			net.remove()
 
 	def print_netlist(self):
 		for net in self.netlist:
