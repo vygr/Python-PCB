@@ -8,8 +8,6 @@ from random import shuffle
 from mymath import *
 from layer import *
 
-UNUSED = -1
-
 def shift(l, n):
 	n = n % len(l)
 	head = l[:n]
@@ -44,117 +42,117 @@ class Pcb():
 		self.width *= resolution
 		self.height *= resolution
 		self.stride = self.width * self.height
-		self.nodes = array('i', [UNUSED for x in xrange(self.stride * self.depth)])
+		self.nodes = array('i', [0 for x in xrange(self.stride * self.depth)])
 		self.netlist = []
 
-	def pcb_set_node(self, node, value):
+	def set_node(self, node, value):
 		self.nodes[(self.stride * node[2]) + (node[1] * self.width) + node[0]] = value
 
-	def pcb_get_node(self, node):
+	def get_node(self, node):
 		return self.nodes[(self.stride * node[2]) + (node[1] * self.width) + node[0]]
 
-	def pcb_all_nodes(self, vectors, node):
+	def all_nodes(self, vectors, node):
 		x, y, z = node
 		for dx, dy, dz in vectors[z % 2]:
 			nx = x + dx; ny = y + dy; nz = z + dz
 			if (0 <= nx < self.width) and (0 <= ny < self.height) and (0 <= nz < self.depth):
 				yield (nx, ny, nz)
 
-	def pcb_all_marked(self, vectors, node):
-		for node in self.pcb_all_nodes(vectors, node):
-			mark = self.pcb_get_node(node)
-			if mark > UNUSED:
+	def all_marked(self, vectors, node):
+		for node in self.all_nodes(vectors, node):
+			mark = self.get_node(node)
+			if mark != 0:
 				yield (mark, node)
 
-	def pcb_all_not_marked(self, vectors, node):
-		for node in self.pcb_all_nodes(vectors, node):
-			if self.pcb_get_node(node) == UNUSED:
+	def all_not_marked(self, vectors, node):
+		for node in self.all_nodes(vectors, node):
+			if self.get_node(node) == 0:
 				yield node
 
-	def pcb_all_nearer_sorted(self, vectors, node, goal, func):
-		distance = self.pcb_get_node(node)
+	def all_nearer_sorted(self, vectors, node, goal, func):
+		distance = self.get_node(node)
 		nodes = [(func(marked[1], goal), marked[1]) \
-					for marked in self.pcb_all_marked(vectors, node) \
+					for marked in self.all_marked(vectors, node) \
 					if (distance - marked[0]) > 0]
 		nodes.sort()
 		for node in nodes:
 			yield node[1]
 
-	def pcb_all_not_shorting(self, gather, params, node, radius):
+	def all_not_shorting(self, gather, params, node, radius):
 		for new_node in gather(*params):
 			if not self.layers.hit_line(node, new_node, radius):
 				yield new_node
 
-	def pcb_mark_distances(self, vectors, radius, starts, ends = []):
-		distance = 0
+	def mark_distances(self, vectors, radius, starts, ends = []):
+		distance = 1
 		nodes = list(starts)
 		for node in nodes:
-			self.pcb_set_node(node, distance)
+			self.set_node(node, distance)
 		while nodes:
 			distance += 1
 			new_nodes = []
 			for node in nodes:
-				for new_node in self.pcb_all_not_shorting(self.pcb_all_not_marked, (vectors, node), node, radius):
-					self.pcb_set_node(new_node, distance)
+				for new_node in self.all_not_shorting(self.all_not_marked, (vectors, node), node, radius):
+					self.set_node(new_node, distance)
 					new_nodes.append(new_node)
 			nodes = new_nodes
-			if UNUSED not in [self.pcb_get_node(node) for node in ends]:
+			if 0 not in [self.get_node(node) for node in ends]:
 				break
 
-	def pcb_unmark_distances(self):
-		self.nodes = array('i', [x if x <= UNUSED else UNUSED for x in self.nodes])
+	def unmark_distances(self):
+		self.nodes = array('i', [0 for x in xrange(self.stride * self.depth)])
 
-	def pcb_add_track(self, track):
+	def add_track(self, track):
 		radius, net = track
 		self.netlist.append(Net(net, radius, self))
 
-	def pcb_route(self, timeout):
+	def route(self, timeout):
 		now = time.time()
 		self.netlist.sort(key = lambda i: i.radius, reverse = True)
 		index = 0
 		while index < len(self.netlist):
-			if self.netlist[index].net_route():
+			if self.netlist[index].route():
 				index += 1
 			else:
 				while True:
-					self.netlist[index].net_reset_topology()
+					self.netlist[index].reset_topology()
 					if index == 0:
-						self.pcb_shuffle_netlist()
+						self.shuffle_netlist()
 						break
 					else:
 						index -= 1
-						self.netlist[index].net_remove()
-						if self.netlist[index].net_next_topology():
+						self.netlist[index].remove()
+						if self.netlist[index].next_topology():
 							break
 						else:
 							self.netlist.insert(0, self.netlist.pop(index + 1))
 							while index != 0:
-								self.netlist[index].net_remove()
-								self.netlist[index].net_reset_topology()
+								self.netlist[index].remove()
+								self.netlist[index].reset_topology()
 								index -= 1
 							break
 			if time.time() - now > timeout:
 				return False
 			if self.verbosity >= 1:
-				self.pcb_print_netlist()
+				self.print_netlist()
 		return True
 
-	def pcb_cost(self):
+	def cost(self):
 		return sum(len(path) for net in self.netlist for path in net.paths)
 
-	def pcb_shuffle_netlist(self):
+	def shuffle_netlist(self):
 		for net in self.netlist:
-			net.net_remove()
-			net.net_shuffle_topology()
+			net.remove()
+			net.shuffle_topology()
 		shuffle(self.netlist)
 
-	def pcb_print_netlist(self):
+	def print_netlist(self):
 		for net in self.netlist:
-			net.net_print()
+			net.print_net()
 		print []
 		sys.stdout.flush()
 
-	def pcb_print(self):
+	def print_pcb(self):
 		scale = 1.0 / self.resolution
 		print [self.width * scale, self.height * scale, self.depth]
 		sys.stdout.flush()
@@ -166,9 +164,9 @@ class Net():
 		self.radius = radius * pcb.resolution
 		self.shift = 0
 		self.paths = []
-		self.net_remove()
+		self.remove()
 
-	def net_next_topology(self):
+	def next_topology(self):
 		self.shift += 1
 		shift(self.terminals, 1)
 		if self.shift == len(self.terminals):
@@ -176,57 +174,57 @@ class Net():
 			return False
 		return True
 
-	def net_reset_topology(self):
+	def reset_topology(self):
 		shift(self.terminals, -self.shift)
 		self.shift = 0
 
-	def net_shuffle_topology(self):
+	def shuffle_topology(self):
 		shuffle(self.terminals)
 
-	def net_add_paths_collision_lines(self):
+	def add_paths_collision_lines(self):
 		for path in self.paths:
 			for a, b in izip(path, islice(path, 1, None)):
 				self.pcb.layers.add_line(a, b, self.radius)
 
-	def net_sub_paths_collision_lines(self):
+	def sub_paths_collision_lines(self):
 		for path in self.paths:
 			for a, b in izip(path, islice(path, 1, None)):
 				self.pcb.layers.sub_line(a, b, self.radius)
 
-	def net_add_terminal_collision_lines(self):
+	def add_terminal_collision_lines(self):
 		for node in self.terminals:
 			r, (x, y, _) = node
 			self.pcb.layers.add_line((x, y, 0), (x, y, self.pcb.depth - 1), r)
 
-	def net_sub_terminal_collision_lines(self):
+	def sub_terminal_collision_lines(self):
 		for node in self.terminals:
 			r, (x, y, _) = node
 			self.pcb.layers.sub_line((x, y, 0), (x, y, self.pcb.depth - 1), r)
 
-	def net_remove(self):
-		self.net_sub_paths_collision_lines()
-		self.net_sub_terminal_collision_lines()
+	def remove(self):
+		self.sub_paths_collision_lines()
+		self.sub_terminal_collision_lines()
 		self.paths = []
-		self.net_add_terminal_collision_lines()
+		self.add_terminal_collision_lines()
 
-	def net_route(self):
+	def route(self):
 		try:
 			self.paths = []
-			self.net_sub_terminal_collision_lines()
+			self.sub_terminal_collision_lines()
 			radius = self.radius + (self.pcb.trackgap * self.pcb.resolution)
 			visited = set()
 			for index in xrange(1, len(self.terminals)):
 				starts = [(x, y, z) for _, (x, y, _) in islice(self.terminals, 0, index) for z in xrange(self.pcb.depth)]
 				ends = [(x, y, z) for _, (x, y, _) in islice(self.terminals, index, index + 1) for z in xrange(self.pcb.depth)]
 				visited |= set(starts)
-				self.pcb.pcb_mark_distances(self.pcb.routing_flood_vectors, radius, visited, ends)
-				ends = [(self.pcb.pcb_get_node(node), node) for node in ends]
+				self.pcb.mark_distances(self.pcb.routing_flood_vectors, radius, visited, ends)
+				ends = [(self.pcb.get_node(node), node) for node in ends]
 				ends.sort()
 				_, end = ends[0]
 				path = [end]
 				dv = (0, 0, 0)
 				while path[-1] not in visited:
-					nearer_nodes = self.pcb.pcb_all_not_shorting(self.pcb.pcb_all_nearer_sorted, \
+					nearer_nodes = self.pcb.all_not_shorting(self.pcb.all_nearer_sorted, \
 								(self.pcb.routing_path_vectors, path[-1], end, self.pcb.dfunc), path[-1], radius)
 					next_node = next(nearer_nodes)
 					if next_node not in visited:
@@ -240,17 +238,17 @@ class Net():
 					path.append(next_node)
 				visited |= set(path)
 				self.paths.append(path)
-				self.pcb.pcb_unmark_distances()
+				self.pcb.unmark_distances()
 			self.paths = optimise_paths(self.paths)
-			self.net_add_paths_collision_lines()
-			self.net_add_terminal_collision_lines()
+			self.add_paths_collision_lines()
+			self.add_terminal_collision_lines()
 			return True
 		except StopIteration:
-			self.pcb.pcb_unmark_distances()
-			self.net_remove()
+			self.pcb.unmark_distances()
+			self.remove()
 			return False
 
-	def net_print(self):
+	def print_net(self):
 		scale = 1.0 / self.pcb.resolution
 		print [self.radius * scale, \
 				[(r * scale, (x * scale, y * scale, z)) for r, (x, y, z) in self.terminals], \

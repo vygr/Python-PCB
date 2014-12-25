@@ -49,23 +49,23 @@ def main():
 		track = literal_eval(line.strip())
 		if not track:
 			break
-		pcb.pcb_add_track(track)
+		pcb.add_track(track)
 	args.infile.close()
 
-	pcb.pcb_print()
+	pcb.print_pcb()
 	best_cost = None
 	best_pcb = None
 	for i in xrange(args.s[0]):
-		if not pcb.pcb_route(args.t[0]):
-			pcb.pcb_shuffle_netlist()
+		if not pcb.route(args.t[0]):
+			pcb.shuffle_netlist()
 			continue
-		cost = pcb.pcb_cost()
+		cost = pcb.cost()
 		if best_cost == None or cost < best_cost:
 			best_cost = cost
 			best_pcb = deepcopy(pcb)
-		pcb.pcb_shuffle_netlist()
+		pcb.shuffle_netlist()
 	if best_pcb != None:
-		best_pcb.pcb_print_netlist()
+		best_pcb.print_netlist()
 	else:
 		print []
 
