@@ -1,17 +1,19 @@
 Python-PCB
 ==========
 
-Python PCB router and viewer
+Python PCB router and viewer.
 
-The viewer requires aggDraw module to be installed.
+There are two viewer apps, view.py requires aggDraw module to be installed, view_mpl.py
+requires matplotlib module to be installed. The matplotlib viwer is much more heavyweight
+than the former.
 
 Example command line would be:
 
-pypy pcb.py netlist.pcb --v 1 | python view.py
+pypy pcb.py --v 1 netlist.pcb | python view.py
 
 You can drop the output to a file and view it as an animation with:
 
-pypy pcb.py netlist.pcb --v 1 > anim
+pypy pcb.py --v 1 netlist.pcb > anim
 python view.py anim
 
 -h or --help for help on either app.
