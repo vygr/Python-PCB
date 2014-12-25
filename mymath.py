@@ -272,7 +272,7 @@ def thicken_path_2d(points, radius, capstyle, joinstyle):
 	index = 0
 	step = 1
 	out_points = []
-	resolution = int(0.3 * math.pi * radius) + 1
+	resolution = int(math.pi * radius) + 1
 	while True:
 		p1 = points[index]; index += step
 		p2 = points[index]; index += step

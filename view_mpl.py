@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 #Copyright (C) 2014 Chris Hinsley All Rights Reserved
 
-import os, sys, argparse, select
+import os, sys, argparse
+import select as myselect
 from ast import literal_eval
 from itertools import izip, islice, chain
 from mymath import *
@@ -85,7 +86,8 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 		img_height = int(pcb_height * pcb_depth * scale)
 
 	ax.clear()
-	ax.set_xlim([0, img_height])
+	subplots_adjust(left = 0.0, right = 1.0, bottom = 0.0, top = 1.0)
+	ax.set_xlim([0, img_width])
 	ax.set_ylim([0, img_height][::-1])
 	ax.set(aspect = 1)
 	ax.axis('off')
@@ -109,9 +111,9 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 					circ = plt.Circle((x, y), radius = radius, color = 'white')
 					ax.add_patch(circ)
 			for r, (x, y, _) in terminals:
-				circ = plt.Circle((x, y), radius = radius, color = 'white')
+				circ = plt.Circle((x, y), radius = r, color = 'white')
 				ax.add_patch(circ)
-				circ = plt.Circle((x, y), radius = radius * 0.5, color = 'black')
+				circ = plt.Circle((x, y), radius = r * 0.5, color = 'black')
 				ax.add_patch(circ)
 	else:
 		for depth in xrange(pcb_depth):
@@ -132,9 +134,9 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 						ax.add_patch(circ)
 				for r, (x, y, _) in terminals:
 					y += depth * pcb_height * scale
-					circ = plt.Circle((x, y), radius = radius, color = 'white')
+					circ = plt.Circle((x, y), radius = r, color = 'white')
 					ax.add_patch(circ)
-					circ = plt.Circle((x, y), radius = radius * 0.5, color = 'black')
+					circ = plt.Circle((x, y), radius = r * 0.5, color = 'black')
 					ax.add_patch(circ)
 	return []
 
@@ -149,11 +151,11 @@ def main():
 	parser.add_argument('--o', nargs = 1, type = int, default = [0], choices=range(0, 2), help = 'overlay modes 0..1, default 0')
 	args = parser.parse_args()
 
-	poll = 0
+	poll = None
 	if os.name != 'nt':
 		if args.infile == sys.stdin:
-			poll = select.poll()
-			poll.register(args.infile, select.POLLIN)
+			poll = myselect.poll()
+			poll.register(args.infile, myselect.POLLIN)
 
 	dimensions = literal_eval(args.infile.readline().strip())
 	pcb_width, pcb_height, pcb_depth = dimensions
@@ -166,8 +168,7 @@ def main():
 		pcb_height = int(pcb_height * pcb_depth * scale)
 
 	fig, ax = plt.subplots(frameon = True, facecolor = 'black')
-	subplots_adjust(left = 0.0, right = 1.0, bottom = 0.0, top = 1.0)
-	ani = animation.FuncAnimation(fig, doframe, fargs = (dimensions, poll, fig, ax), interval = 10, blit = True, repeat = True)
+	ani = animation.FuncAnimation(fig, doframe, fargs = (dimensions, poll, fig, ax), interval = 10, blit = False, repeat = True)
 	plt.show()
 
 if __name__ == '__main__':
