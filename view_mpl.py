@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 #Copyright (C) 2014 Chris Hinsley All Rights Reserved
 
-import os, sys, argparse
-import select as myselect
+import os, sys, argparse, select
 from ast import literal_eval
 from itertools import izip, islice, chain
 from mymath import *
@@ -13,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.path as path
 import matplotlib.animation as animation
-from pylab import *
+import pylab
 
 MARGIN = 2
 
@@ -86,7 +85,7 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 		img_height = int(pcb_height * pcb_depth * scale)
 
 	ax.clear()
-	subplots_adjust(left = 0.0, right = 1.0, bottom = 0.0, top = 1.0)
+	pylab.subplots_adjust(left = 0.0, right = 1.0, bottom = 0.0, top = 1.0)
 	ax.set_xlim([0, img_width])
 	ax.set_ylim([0, img_height][::-1])
 	ax.set(aspect = 1)
@@ -154,8 +153,8 @@ def main():
 	poll = None
 	if os.name != 'nt':
 		if args.infile == sys.stdin:
-			poll = myselect.poll()
-			poll.register(args.infile, myselect.POLLIN)
+			poll = select.poll()
+			poll.register(args.infile, select.POLLIN)
 
 	dimensions = literal_eval(args.infile.readline().strip())
 	pcb_width, pcb_height, pcb_depth = dimensions
