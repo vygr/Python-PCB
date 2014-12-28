@@ -58,7 +58,7 @@ def distance_squared(p1, p2):
 	p = sub(p2, p1)
 	return dot(p, p)
 
-def normalise(p):
+def norm(p):
 	l = length(p)
 	if l == 0:
 		return scale(p, 0)
@@ -142,14 +142,14 @@ def length_2d(p):
 def length_3d(p):
 	return math.sqrt(dot_3d(p, p))
 
-def normalise_2d(p):
+def norm_2d(p):
 	l = length_2d(p)
 	if l == 0:
 		return (0, 0)
 	x, y = p
 	return (x / l, y / l)
 
-def normalise_3d(p):
+def norm_3d(p):
 	l = length_3d(p)
 	if l == 0:
 		return (0, 0, 0)
@@ -278,7 +278,7 @@ def thicken_path_2d(points, radius, capstyle, joinstyle):
 		p2 = points[index]; index += step
 		l2_v = sub_2d(p2, p1)
 		l2_pv = perp_2d(l2_v)
-		l2_npv = normalise_2d(l2_pv)
+		l2_npv = norm_2d(l2_pv)
 		rv = scale_2d(l2_npv, radius)
 		if capstyle == 0:
 			#butt cap
@@ -308,9 +308,9 @@ def thicken_path_2d(points, radius, capstyle, joinstyle):
 			p2 = points[index]; index += step
 			l2_v = sub_2d(p2, p1)
 			l2_pv = perp_2d(l2_v)
-			l2_npv = normalise_2d(l2_pv)
-			nbv = normalise_2d(scale_2d(add_2d(l1_npv, l2_npv), 0.5))
-			c = dot_2d(nbv, normalise_2d(l1_v))
+			l2_npv = norm_2d(l2_pv)
+			nbv = norm_2d(scale_2d(add_2d(l1_npv, l2_npv), 0.5))
+			c = dot_2d(nbv, norm_2d(l1_v))
 			if c <= 0 or joinstyle == 0:
 				#mitre join
 				s = math.sin(math.acos(c))
