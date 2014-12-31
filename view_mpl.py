@@ -128,7 +128,7 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 					if path[0][2] != path[-1][2]:
 						x, y, _ = path[0]
 						y += depth * pcb_height * scale
-						circ = plt.Circle((x, y), radius = radius * 0.5, color = 'white')
+						circ = plt.Circle((x, y), radius = radius, color = 'white')
 						ax.add_patch(circ)
 				for r, (x, y, _) in terminals:
 					y += depth * pcb_height * scale
