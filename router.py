@@ -21,7 +21,7 @@ def optimise_paths(paths):
 		opt_path = []
 		d = (0, 0, 0)
 		for a, b in izip(path, islice(path, 1, None)):
-			d1 = normalise_3d(sub_3d(b, a))
+			d1 = norm_3d(sub_3d(b, a))
 			if d1 != d:
 				opt_path.append(a)
 				d = d1
@@ -220,9 +220,8 @@ class Net():
 			radius = self.radius + (self.pcb.trackgap * self.pcb.resolution)
 			visited = set()
 			for index in xrange(1, len(self.terminals)):
-				starts = [(x, y, z) for _, (x, y, _) in islice(self.terminals, 0, index) for z in xrange(self.pcb.depth)]
-				ends = [(x, y, z) for _, (x, y, _) in islice(self.terminals, index, index + 1) for z in xrange(self.pcb.depth)]
-				visited |= set(starts)
+				visited |= set([(self.terminals[index - 1][1][0], self.terminals[index - 1][1][1], z) for z in xrange(self.pcb.depth)])
+				ends = [(self.terminals[index][1][0], self.terminals[index][1][1], z) for z in xrange(self.pcb.depth)]
 				self.pcb.mark_distances(self.pcb.routing_flood_vectors, radius, visited, ends)
 				ends = [(self.pcb.get_node(node), node) for node in ends]
 				ends.sort()
@@ -238,9 +237,9 @@ class Net():
 							if node in visited:
 								next_node = node
 								break
-							if dv == normalise_3d(sub_3d(node, path[-1])):
+							if dv == norm_3d(sub_3d(node, path[-1])):
 								next_node = node
-					dv = normalise_3d(sub_3d(next_node, path[-1]))
+					dv = norm_3d(sub_3d(next_node, path[-1]))
 					path.append(next_node)
 				visited |= set(path)
 				self.paths.append(path)
