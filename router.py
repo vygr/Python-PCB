@@ -51,23 +51,22 @@ class Pcb():
 	def get_node(self, node):
 		return self.nodes[(self.stride * node[2]) + (node[1] * self.width) + node[0]]
 
-	def all_nodes(self, vectors, node):
+	def all_marked(self, vectors, node):
 		x, y, z = node
 		for dx, dy, dz in vectors[z % 2]:
 			nx = x + dx; ny = y + dy; nz = z + dz
 			if (0 <= nx < self.width) and (0 <= ny < self.height) and (0 <= nz < self.depth):
-				yield (nx, ny, nz)
-
-	def all_marked(self, vectors, node):
-		for node in self.all_nodes(vectors, node):
-			mark = self.get_node(node)
-			if mark != 0:
-				yield (mark, node)
+				mark = self.get_node((nx, ny, nz))
+				if mark != 0:
+					yield (mark, (nx, ny, nz))
 
 	def all_not_marked(self, vectors, node):
-		for node in self.all_nodes(vectors, node):
-			if self.get_node(node) == 0:
-				yield node
+		x, y, z = node
+		for dx, dy, dz in vectors[z % 2]:
+			nx = x + dx; ny = y + dy; nz = z + dz
+			if (0 <= nx < self.width) and (0 <= ny < self.height) and (0 <= nz < self.depth):
+				if self.get_node((nx, ny, nz)) == 0:
+					yield (nx, ny, nz)
 
 	def all_nearer_sorted(self, vectors, node, goal, func):
 		distance = self.get_node(node)
