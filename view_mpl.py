@@ -40,11 +40,12 @@ def split_paths(paths):
 def scale_and_split_tracks(tracks, scale):
 	for track in tracks:
 		track[0] *= scale
-		track[2] = split_paths(track[2])
-		for i in xrange(len(track[1])):
-			r, (x, y, z) = track[1][i]
-			track[1][i] = r * scale, ((x + MARGIN) * scale, (y + MARGIN) * scale, z)
-		for path in track[2]:
+		track[1] *= scale
+		track[3] = split_paths(track[3])
+		for i in xrange(len(track[2])):
+			r, (x, y, z) = track[2][i]
+			track[2][i] = r * scale, ((x + MARGIN) * scale, (y + MARGIN) * scale, z)
+		for path in track[3]:
 			for i in xrange(len(path)):
 				x, y, z = path[i]
 				path[i] = (x + MARGIN) * scale, (y + MARGIN) * scale, z
@@ -95,18 +96,18 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 		for depth in xrange(pcb_depth - 1, -1, -1):
 			brush = colors[depth % len(colors)]
 			for track in tracks:
-				radius, terminals, paths = track
+				radius, via, terminals, paths = track
 				for path in paths:
 					if path[0][2] == path[-1][2] == depth:
 						points = thicken_path_2d([(x, y) for x, y, _ in path], radius, 3, 2)
 						poly = plt.Polygon(points, facecolor = brush, edgecolor = 'none', alpha = 0.5)
 						ax.add_patch(poly)
 		for track in tracks:
-			radius, terminals, paths = track
+			radius, via, terminals, paths = track
 			for path in paths:
 				if path[0][2] != path[-1][2]:
 					x, y, _ = path[0]
-					circ = plt.Circle((x, y), radius = radius, color = 'white')
+					circ = plt.Circle((x, y), radius = via, color = 'white')
 					ax.add_patch(circ)
 			for r, (x, y, _) in terminals:
 				circ = plt.Circle((x, y), radius = r, color = 'white')
@@ -116,19 +117,19 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 	else:
 		for depth in xrange(pcb_depth):
 			for track in tracks:
-				radius, terminals, paths = track
+				radius, via, terminals, paths = track
 				for path in paths:
 					if path[0][2] == path[-1][2] == depth:
 						points = thicken_path_2d([(x, y + depth * pcb_height * scale) for x, y, _ in path], radius, 3, 2)
 						poly = plt.Polygon(points, facecolor = 'red', edgecolor = 'none')
 						ax.add_patch(poly)
 			for track in tracks:
-				radius, terminals, paths = track
+				radius, via, terminals, paths = track
 				for path in paths:
 					if path[0][2] != path[-1][2]:
 						x, y, _ = path[0]
 						y += depth * pcb_height * scale
-						circ = plt.Circle((x, y), radius = radius, color = 'white')
+						circ = plt.Circle((x, y), radius = via, color = 'white')
 						ax.add_patch(circ)
 				for r, (x, y, _) in terminals:
 					y += depth * pcb_height * scale

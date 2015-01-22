@@ -37,11 +37,12 @@ def split_paths(paths):
 def scale_and_split_tracks(tracks, scale):
 	for track in tracks:
 		track[0] *= scale
-		track[2] = split_paths(track[2])
-		for i in xrange(len(track[1])):
-			r, (x, y, z) = track[1][i]
-			track[1][i] = r * scale, ((x + MARGIN) * scale, (y + MARGIN) * scale, z)
-		for path in track[2]:
+		track[1] *= scale
+		track[3] = split_paths(track[3])
+		for i in xrange(len(track[2])):
+			r, (x, y, z) = track[2][i]
+			track[2][i] = r * scale, ((x + MARGIN) * scale, (y + MARGIN) * scale, z)
+		for path in track[3]:
 			for i in xrange(len(path)):
 				x, y, z = path[i]
 				path[i] = (x + MARGIN) * scale, (y + MARGIN) * scale, z
@@ -94,35 +95,35 @@ def doframe(dimensions, root, canvas, poll):
 		for depth in xrange(pcb_depth - 1, -1, -1):
 			brush = aggdraw.Brush(colors[depth % len(colors)], opacity = 128)
 			for track in tracks:
-				radius, terminals, paths = track
+				radius, via, terminals, paths = track
 				for path in paths:
 					if path[0][2] == path[-1][2] == depth:
 						points = list(chain.from_iterable(thicken_path_2d([(x, y) for x, y, _ in path], radius, 3, 2)))
 						ctx.polygon(points, brush)
 		for track in tracks:
-			radius, terminals, paths = track
+			radius, via, terminals, paths = track
 			for path in paths:
 				if path[0][2] != path[-1][2]:
 					x, y, _ = path[0]
-					ctx.ellipse((x - radius, y - radius, x + radius, y + radius), white_brush)
+					ctx.ellipse((x - via, y - via, x + via, y + via), white_brush)
 			for r, (x, y, _) in terminals:
 				ctx.ellipse((x - r, y - r, x + r, y + r), white_brush)
 				ctx.ellipse((x - r * 0.5, y - r * 0.5, x + r * 0.5, y + r * 0.5), black_brush)
 	else:
 		for depth in xrange(pcb_depth):
 			for track in tracks:
-				radius, terminals, paths = track
+				radius, via, terminals, paths = track
 				for path in paths:
 					if path[0][2] == path[-1][2] == depth:
 						points = list(chain.from_iterable(thicken_path_2d([(x, y + depth * pcb_height * scale) for x, y, _ in path], radius, 3, 2)))
 						ctx.polygon(points, red_brush)
 			for track in tracks:
-				radius, terminals, paths = track
+				radius, via, terminals, paths = track
 				for path in paths:
 					if path[0][2] != path[-1][2]:
 						x, y, _ = path[0]
 						y += depth * pcb_height * scale
-						ctx.ellipse((x - radius, y - radius, x + radius, y + radius), white_brush)
+						ctx.ellipse((x - via, y - via, x + via, y + via), white_brush)
 				for r, (x, y, _) in terminals:
 					y += depth * pcb_height * scale
 					ctx.ellipse((x - r, y - r, x + r, y + r), white_brush)
