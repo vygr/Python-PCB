@@ -255,5 +255,5 @@ class Net():
 	def print_net(self):
 		scale = 1.0 / self.pcb.resolution
 		print [self.radius * scale, self.radius * scale, \
-				[(r * scale, (x * scale, y * scale, z)) for r, (x, y, z) in self.terminals], \
+				[(r * scale, (x * scale, y * scale, z), []) for r, (x, y, z) in self.terminals], \
 				[[(x * scale, y * scale, z) for x, y, z in path] for path in self.paths]]

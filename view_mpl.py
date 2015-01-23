@@ -43,8 +43,8 @@ def scale_and_split_tracks(tracks, scale):
 		track[1] *= scale
 		track[3] = split_paths(track[3])
 		for i in xrange(len(track[2])):
-			r, (x, y, z) = track[2][i]
-			track[2][i] = r * scale, ((x + MARGIN) * scale, (y + MARGIN) * scale, z)
+			r, (x, y, z), s = track[2][i]
+			track[2][i] = r * scale, ((x + MARGIN) * scale, (y + MARGIN) * scale, z), [(cx * scale, cy * scale) for cx, cy in s]
 		for path in track[3]:
 			for i in xrange(len(path)):
 				x, y, z = path[i]
@@ -109,11 +109,27 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 					x, y, _ = path[0]
 					circ = plt.Circle((x, y), radius = via, color = 'white')
 					ax.add_patch(circ)
-			for r, (x, y, _) in terminals:
-				circ = plt.Circle((x, y), radius = r, color = 'white')
-				ax.add_patch(circ)
-				circ = plt.Circle((x, y), radius = r * 0.5, color = 'black')
-				ax.add_patch(circ)
+			for r, (x, y, _), s in terminals:
+				if not s:
+					circ = plt.Circle((x, y), radius = r, color = 'white')
+					ax.add_patch(circ)
+					circ = plt.Circle((x, y), radius = r * 0.5, color = 'black')
+					ax.add_patch(circ)
+				else:
+					if r !=0:
+						points = thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r, 3, 2)
+						poly = plt.Polygon(points, facecolor = 'white', edgecolor = 'none')
+						ax.add_patch(poly)
+						points = thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r * 0.5, 3, 2)
+						poly = plt.Polygon(points, facecolor = 'black', edgecolor = 'none')
+						ax.add_patch(poly)
+					else:
+						points = [(cx + x, cy + y) for cx, cy in s]
+						poly = plt.Polygon(points, facecolor = 'white', edgecolor = 'none')
+						ax.add_patch(poly)
+						points = [(cx * 0.5 + x, cy * 0.5 + y) for cx, cy in s]
+						poly = plt.Polygon(points, facecolor = 'black', edgecolor = 'none')
+						ax.add_patch(poly)
 	else:
 		for depth in xrange(pcb_depth):
 			for track in tracks:
@@ -131,12 +147,28 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 						y += depth * pcb_height * scale
 						circ = plt.Circle((x, y), radius = via, color = 'white')
 						ax.add_patch(circ)
-				for r, (x, y, _) in terminals:
+				for r, (x, y, _), s in terminals:
 					y += depth * pcb_height * scale
-					circ = plt.Circle((x, y), radius = r, color = 'white')
-					ax.add_patch(circ)
-					circ = plt.Circle((x, y), radius = r * 0.5, color = 'black')
-					ax.add_patch(circ)
+					if not s:
+						circ = plt.Circle((x, y), radius = r, color = 'white')
+						ax.add_patch(circ)
+						circ = plt.Circle((x, y), radius = r * 0.5, color = 'black')
+						ax.add_patch(circ)
+					else:
+						if r !=0:
+							points = thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r, 3, 2)
+							poly = plt.Polygon(points, facecolor = 'white', edgecolor = 'none')
+							ax.add_patch(poly)
+							points = thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r * 0.5, 3, 2)
+							poly = plt.Polygon(points, facecolor = 'black', edgecolor = 'none')
+							ax.add_patch(poly)
+						else:
+							points = [(cx + x, cy + y) for cx, cy in s]
+							poly = plt.Polygon(points, facecolor = 'white', edgecolor = 'none')
+							ax.add_patch(poly)
+							points = [(cx * 0.5 + x, cy * 0.5 + y) for cx, cy in s]
+							poly = plt.Polygon(points, facecolor = 'black', edgecolor = 'none')
+							ax.add_patch(poly)
 	return []
 
 def main():
