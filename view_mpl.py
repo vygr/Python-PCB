@@ -113,22 +113,14 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 				if not s:
 					circ = plt.Circle((x, y), radius = r, color = 'white')
 					ax.add_patch(circ)
-					circ = plt.Circle((x, y), radius = r * 0.5, color = 'black')
-					ax.add_patch(circ)
 				else:
 					if r !=0:
 						points = thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r, 3, 2)
 						poly = plt.Polygon(points, facecolor = 'white', edgecolor = 'none')
 						ax.add_patch(poly)
-						points = thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r * 0.5, 3, 2)
-						poly = plt.Polygon(points, facecolor = 'black', edgecolor = 'none')
-						ax.add_patch(poly)
 					else:
 						points = [(cx + x, cy + y) for cx, cy in s]
 						poly = plt.Polygon(points, facecolor = 'white', edgecolor = 'none')
-						ax.add_patch(poly)
-						points = [(cx * 0.5 + x, cy * 0.5 + y) for cx, cy in s]
-						poly = plt.Polygon(points, facecolor = 'black', edgecolor = 'none')
 						ax.add_patch(poly)
 	else:
 		for depth in xrange(pcb_depth):
@@ -137,7 +129,7 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 				for path in paths:
 					if path[0][2] == path[-1][2] == depth:
 						points = thicken_path_2d([(x, y + depth * pcb_height * scale) for x, y, _ in path], radius, 3, 2)
-						poly = plt.Polygon(points, facecolor = 'red', edgecolor = 'none')
+						poly = plt.Polygon(points, facecolor = 'white', edgecolor = 'none')
 						ax.add_patch(poly)
 			for track in tracks:
 				radius, via, terminals, paths = track
@@ -152,22 +144,14 @@ def doframe(frame_num, dimensions, poll, fig, ax):
 					if not s:
 						circ = plt.Circle((x, y), radius = r, color = 'white')
 						ax.add_patch(circ)
-						circ = plt.Circle((x, y), radius = r * 0.5, color = 'black')
-						ax.add_patch(circ)
 					else:
 						if r !=0:
 							points = thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r, 3, 2)
 							poly = plt.Polygon(points, facecolor = 'white', edgecolor = 'none')
 							ax.add_patch(poly)
-							points = thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r * 0.5, 3, 2)
-							poly = plt.Polygon(points, facecolor = 'black', edgecolor = 'none')
-							ax.add_patch(poly)
 						else:
 							points = [(cx + x, cy + y) for cx, cy in s]
 							poly = plt.Polygon(points, facecolor = 'white', edgecolor = 'none')
-							ax.add_patch(poly)
-							points = [(cx * 0.5 + x, cy * 0.5 + y) for cx, cy in s]
-							poly = plt.Polygon(points, facecolor = 'black', edgecolor = 'none')
 							ax.add_patch(poly)
 	return []
 

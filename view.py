@@ -86,7 +86,6 @@ def doframe(dimensions, root, canvas, poll):
 	canvas.delete("all")
 	image = Image.new("RGB", (img_width, img_height), "black")
 	ctx = aggdraw.Draw(image)
-	black_brush = aggdraw.Brush('black', opacity = 255)
 	white_brush = aggdraw.Brush('white', opacity = 255)
 	red_brush = aggdraw.Brush('red', opacity = 255)
 
@@ -109,18 +108,13 @@ def doframe(dimensions, root, canvas, poll):
 			for r, (x, y, _), s in terminals:
 				if not s:
 					ctx.ellipse((x - r, y - r, x + r, y + r), white_brush)
-					ctx.ellipse((x - r * 0.5, y - r * 0.5, x + r * 0.5, y + r * 0.5), black_brush)
 				else:
 					if r != 0:
 						points = list(chain.from_iterable(thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r, 3, 2)))
 						ctx.polygon(points, white_brush)
-						points = list(chain.from_iterable(thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r * 0.5, 3, 2)))
-						ctx.polygon(points, black_brush)
 					else:
 						points = list(chain.from_iterable([(cx + x, cy + y) for cx, cy in s]))
 						ctx.polygon(points, white_brush)
-						points = list(chain.from_iterable([(cx * 0.5 + x, cy * 0.5 + y) for cx, cy in s]))
-						ctx.polygon(points, black_brush)
 	else:
 		for depth in xrange(pcb_depth):
 			for track in tracks:
@@ -128,7 +122,7 @@ def doframe(dimensions, root, canvas, poll):
 				for path in paths:
 					if path[0][2] == path[-1][2] == depth:
 						points = list(chain.from_iterable(thicken_path_2d([(x, y + depth * pcb_height * scale) for x, y, _ in path], radius, 3, 2)))
-						ctx.polygon(points, red_brush)
+						ctx.polygon(points, white_brush)
 			for track in tracks:
 				radius, via, terminals, paths = track
 				for path in paths:
@@ -140,18 +134,13 @@ def doframe(dimensions, root, canvas, poll):
 					y += depth * pcb_height * scale
 					if not s:
 						ctx.ellipse((x - r, y - r, x + r, y + r), white_brush)
-						ctx.ellipse((x - r * 0.5, y - r * 0.5, x + r * 0.5, y + r * 0.5), black_brush)
 					else:
 						if r != 0:
 							points = list(chain.from_iterable(thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r, 3, 2)))
 							ctx.polygon(points, white_brush)
-							points = list(chain.from_iterable(thicken_path_2d([(cx + x, cy + y) for cx, cy in s], r * 0.5, 3, 2)))
-							ctx.polygon(points, black_brush)
 						else:
 							points = list(chain.from_iterable([(cx + x, cy + y) for cx, cy in s]))
 							ctx.polygon(points, white_brush)
-							points = list(chain.from_iterable([(cx * 0.5 + x, cy * 0.5 + y) for cx, cy in s]))
-							ctx.polygon(points, black_brush)
 	ctx.flush()
 	photo = ImageTk.PhotoImage(image)
 	canvas.create_image(0, 0, image = photo, anchor = Tkinter.NW)
