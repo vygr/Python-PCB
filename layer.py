@@ -11,11 +11,12 @@ class Layer():
 		self.test = 0
 
 	def aabb(self, line):
-		x1, y1, x2, y2, r = line
+		x1, y1, x2, y2, r, g = line
 		if x1 > x2:
 			x1, x2 = x2, x1
 		if y1 > y2:
 			y1, y2 = y2, y1
+		r += g
 		minx = int(math.floor((x1 - r) * self.scale))
 		miny = int(math.floor((y1 - r) * self.scale))
 		maxx = int(math.ceil((x2 + r) * self.scale))
@@ -28,8 +29,6 @@ class Layer():
 			maxx = self.width
 		if maxy > self.height:
 			maxy = self.height
-		if minx > maxx or miny > maxy:
-			Exit(20)
 		return (minx, miny, maxx, maxy)
 
 	def all_buckets(self, aabb):
@@ -69,9 +68,10 @@ class Layer():
 			for record in bucket:
 				if record[0] != self.test:
 					record[0] = self.test
-					l1_p1x, l1_p1y, l1_p2x, l1_p2y, l1_r = line
-					l2_p1x, l2_p1y, l2_p2x, l2_p2y, l2_r = record[1]
-					if mymath.collide_thick_lines_2d((l1_p1x, l1_p1y), (l1_p2x, l1_p2y), (l2_p1x, l2_p1y), (l2_p2x, l2_p2y), l1_r, l2_r):
+					l1_p1x, l1_p1y, l1_p2x, l1_p2y, l1_r, l1_g = line
+					l2_p1x, l2_p1y, l2_p2x, l2_p2y, l2_r, l2_g = record[1]
+					r = l1_r + l2_r + max(l1_g, l2_g)
+					if mymath.collide_thick_lines_2d((l1_p1x, l1_p1y), (l1_p2x, l1_p2y), (l2_p1x, l2_p1y), (l2_p2x, l2_p2y), r):
 						return True
 		return False
 
@@ -87,22 +87,22 @@ class Layers():
 		else:
 			yield self.layers[z1]
 
-	def add_line(self, p1, p2, r):
+	def add_line(self, p1, p2, r, g):
 		x1, y1, z1 = p1
 		x2, y2, z2 = p2
 		for layer in self.all_layers(z1, z2):
-			layer.add_line((x1, y1, x2, y2, r))
+			layer.add_line((x1, y1, x2, y2, r, g))
 
-	def sub_line(self, p1, p2, r):
+	def sub_line(self, p1, p2, r, g):
 		x1, y1, z1 = p1
 		x2, y2, z2 = p2
 		for layer in self.all_layers(z1, z2):
-			layer.sub_line((x1, y1, x2, y2, r))
+			layer.sub_line((x1, y1, x2, y2, r, g))
 
-	def hit_line(self, p1, p2, r):
+	def hit_line(self, p1, p2, r, g):
 		x1, y1, z1 = p1
 		x2, y2, z2 = p2
 		for layer in self.all_layers(z1, z2):
-			if layer.hit_line((x1, y1, x2, y2, r)):
+			if layer.hit_line((x1, y1, x2, y2, r, g)):
 				return True
 		return False

@@ -250,17 +250,17 @@ def collide_lines_2d(l1_p1, l1_p2, l2_p1, l2_p2):
 				return False
 	return True
 
-def collide_thick_lines_2d(tl1_p1, tl1_p2, tl2_p1, tl2_p2, tl1_r, tl2_r):
+def collide_thick_lines_2d(tl1_p1, tl1_p2, tl2_p1, tl2_p2, r):
 	if collide_lines_2d(tl1_p1, tl1_p2, tl2_p1, tl2_p2):
 		return True
-	radius_squared = (tl1_r + tl2_r) ** 2
-	if distance_squared_to_line_2d(tl2_p1, tl1_p1, tl1_p2) <= radius_squared:
+	r *= r
+	if distance_squared_to_line_2d(tl2_p1, tl1_p1, tl1_p2) <= r:
 		return True
-	if distance_squared_to_line_2d(tl2_p2, tl1_p1, tl1_p2) <= radius_squared:
+	if distance_squared_to_line_2d(tl2_p2, tl1_p1, tl1_p2) <= r:
 		return True
-	if distance_squared_to_line_2d(tl1_p1, tl2_p1, tl2_p2) <= radius_squared:
+	if distance_squared_to_line_2d(tl1_p1, tl2_p1, tl2_p2) <= r:
 		return True
-	if distance_squared_to_line_2d(tl1_p2, tl2_p1, tl2_p2) <= radius_squared:
+	if distance_squared_to_line_2d(tl1_p2, tl2_p1, tl2_p2) <= r:
 		return True
 	return False
 

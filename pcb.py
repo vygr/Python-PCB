@@ -13,7 +13,6 @@ def main():
 	parser.add_argument('--t', nargs = 1, type = int, default = [600], help = 'timeout in seconds, default 600')
 	parser.add_argument('--v', nargs = 1, type = int, default = [0], choices = range(0, 2), help = 'verbosity level 0..1, default 0')
 	parser.add_argument('--s', nargs = 1, type = int, default = [1], help = 'number of samples, default 1')
-	parser.add_argument('--g', nargs = 1, type = float, default = [0.1], help = 'track gap, default 0.1')
 	parser.add_argument('--r', nargs = 1, type = int, default = [1], choices = range(1, 5), help = 'grid resolution 1..4, default 1')
 	parser.add_argument('--d', nargs = 1, type = int, default = [0], choices = range(0, 6), \
 			help = 'distance metric 0..5, default 0.\n' \
@@ -44,7 +43,7 @@ def main():
 				chebyshev_distance, reciprical_distance, random_distance][args.d[0]]
 
 	dimensions = literal_eval(args.infile.readline().strip())
-	pcb = router.Pcb(dimensions, routing_flood_vectors, routing_path_vectors, dfunc, args.r[0], args.v[0], args.g[0])
+	pcb = router.Pcb(dimensions, routing_flood_vectors, routing_path_vectors, dfunc, args.r[0], args.v[0])
 	for line in args.infile:
 		track = literal_eval(line.strip())
 		if not track:

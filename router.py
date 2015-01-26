@@ -30,8 +30,7 @@ def optimise_paths(paths):
 	return opt_paths
 
 class Pcb():
-	def __init__(self, dimensions, routing_flood_vectors, routing_path_vectors, dfunc, resolution, verbosity, trackgap):
-		self.trackgap = trackgap
+	def __init__(self, dimensions, routing_flood_vectors, routing_path_vectors, dfunc, resolution, verbosity):
 		self.dfunc = dfunc
 		self.verbosity = verbosity
 		self.routing_flood_vectors = routing_flood_vectors
@@ -77,12 +76,16 @@ class Pcb():
 		for node in nodes:
 			yield node[1]
 
-	def all_not_shorting(self, gather, params, node, radius):
+	def all_not_shorting(self, gather, params, node, radius, via, gap):
 		for new_node in gather(*params):
-			if not self.layers.hit_line(node, new_node, radius):
-				yield new_node
+			if node[2] != new_node[2]:
+				if not self.layers.hit_line(node, new_node, via, gap):
+					yield new_node
+			else:
+				if not self.layers.hit_line(node, new_node, radius, gap):
+					yield new_node
 
-	def mark_distances(self, vectors, radius, starts, ends = []):
+	def mark_distances(self, vectors, radius, via, gap, starts, ends = []):
 		distance = 1
 		nodes = list(starts)
 		for node in nodes:
@@ -91,7 +94,7 @@ class Pcb():
 			distance += 1
 			new_nodes = []
 			for node in nodes:
-				for new_node in self.all_not_shorting(self.all_not_marked, (vectors, node), node, radius):
+				for new_node in self.all_not_shorting(self.all_not_marked, (vectors, node), node, radius, via, gap):
 					self.set_node(new_node, distance)
 					new_nodes.append(new_node)
 			nodes = new_nodes
@@ -102,8 +105,8 @@ class Pcb():
 		self.nodes = array('i', [0 for x in xrange(self.stride * self.depth)])
 
 	def add_track(self, track):
-		radius, net = track
-		self.netlist.append(Net(net, radius, self))
+		radius, via, gap, net = track
+		self.netlist.append(Net(net, radius, via, gap, self))
 
 	def route(self, timeout):
 		self.remove_netlist()
@@ -163,10 +166,15 @@ class Pcb():
 		sys.stdout.flush()
 
 class Net():
-	def __init__(self, terminals, radius, pcb):
+	def __init__(self, terminals, radius, via, gap, pcb):
 		self.pcb = pcb
-		self.terminals = [(r * pcb.resolution, (x * pcb.resolution, y * pcb.resolution, z)) for r, (x, y, z) in terminals]
+		self.terminals = [(r * pcb.resolution, g * pcb.resolution, \
+			 				(x * pcb.resolution, y * pcb.resolution, z), \
+							[(cx * pcb.resolution, cy * pcb.resolution) for cx, cy in s]) \
+						 	for r, g, (x, y, z), s in terminals]
 		self.radius = radius * pcb.resolution
+		self.via = via * pcb.resolution
+		self.gap = gap * pcb.resolution
 		self.shift = 0
 		self.paths = []
 		self.remove()
@@ -189,22 +197,38 @@ class Net():
 	def add_paths_collision_lines(self):
 		for path in self.paths:
 			for a, b in izip(path, islice(path, 1, None)):
-				self.pcb.layers.add_line(a, b, self.radius)
+				if a[2] != b[2]:
+					self.pcb.layers.add_line(a, b, self.via, self.gap)
+				else:
+					self.pcb.layers.add_line(a, b, self.radius, self.gap)
 
 	def sub_paths_collision_lines(self):
 		for path in self.paths:
 			for a, b in izip(path, islice(path, 1, None)):
-				self.pcb.layers.sub_line(a, b, self.radius)
+				if a[2] != b[2]:
+					self.pcb.layers.sub_line(a, b, self.via, self.gap)
+				else:
+					self.pcb.layers.sub_line(a, b, self.radius, self.gap)
 
 	def add_terminal_collision_lines(self):
 		for node in self.terminals:
-			r, (x, y, _) = node
-			self.pcb.layers.add_line((x, y, 0), (x, y, self.pcb.depth - 1), r)
+			r, g, (x, y, _), s = node
+			if not s:
+				self.pcb.layers.add_line((x, y, 0), (x, y, self.pcb.depth - 1), r, g)
+			else:
+				for z in xrange(self.pcb.depth):
+					for a, b in izip(s, islice(s, 1, None)):
+						self.pcb.layers.add_line((x + a[0], y + a[1], z), (x + b[0], y + b[1], z), r, g)
 
 	def sub_terminal_collision_lines(self):
 		for node in self.terminals:
-			r, (x, y, _) = node
-			self.pcb.layers.sub_line((x, y, 0), (x, y, self.pcb.depth - 1), r)
+			r, g, (x, y, _), s = node
+			if not s:
+				self.pcb.layers.sub_line((x, y, 0), (x, y, self.pcb.depth - 1), r, g)
+			else:
+				for z in xrange(self.pcb.depth):
+					for a, b in izip(s, islice(s, 1, None)):
+						self.pcb.layers.sub_line((x + a[0], y + a[1], z), (x + b[0], y + b[1], z), r, g)
 
 	def remove(self):
 		self.sub_paths_collision_lines()
@@ -216,12 +240,11 @@ class Net():
 		try:
 			self.paths = []
 			self.sub_terminal_collision_lines()
-			radius = self.radius + (self.pcb.trackgap * self.pcb.resolution)
 			visited = set()
 			for index in xrange(1, len(self.terminals)):
-				visited |= set([(self.terminals[index - 1][1][0], self.terminals[index - 1][1][1], z) for z in xrange(self.pcb.depth)])
-				ends = [(self.terminals[index][1][0], self.terminals[index][1][1], z) for z in xrange(self.pcb.depth)]
-				self.pcb.mark_distances(self.pcb.routing_flood_vectors, radius, visited, ends)
+				visited |= set([(int(self.terminals[index - 1][2][0]+0.5), int(self.terminals[index - 1][2][1]+0.5), z) for z in xrange(self.pcb.depth)])
+				ends = [(int(self.terminals[index][2][0]+0.5), int(self.terminals[index][2][1]+0.5), z) for z in xrange(self.pcb.depth)]
+				self.pcb.mark_distances(self.pcb.routing_flood_vectors, self.radius, self.via, self.gap, visited, ends)
 				ends = [(self.pcb.get_node(node), node) for node in ends]
 				ends.sort()
 				_, end = ends[0]
@@ -229,7 +252,7 @@ class Net():
 				dv = (0, 0, 0)
 				while path[-1] not in visited:
 					nearer_nodes = self.pcb.all_not_shorting(self.pcb.all_nearer_sorted, \
-								(self.pcb.routing_path_vectors, path[-1], end, self.pcb.dfunc), path[-1], radius)
+								(self.pcb.routing_path_vectors, path[-1], end, self.pcb.dfunc), path[-1], self.radius, self.via, self.gap)
 					next_node = next(nearer_nodes)
 					if next_node not in visited:
 						for node in nearer_nodes:
@@ -254,6 +277,7 @@ class Net():
 
 	def print_net(self):
 		scale = 1.0 / self.pcb.resolution
-		print [self.radius * scale, self.radius * scale, \
-				[(r * scale, (x * scale, y * scale, z), []) for r, (x, y, z) in self.terminals], \
+		print [self.radius * scale, self.via * scale, self.gap * scale, \
+				[(r * scale, g * scale, (x * scale, y * scale, z), \
+				[(cx * scale, cy * scale) for cx, cy in s]) for r, g, (x, y, z), s in self.terminals], \
 				[[(x * scale, y * scale, z) for x, y, z in path] for path in self.paths]]
