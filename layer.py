@@ -85,7 +85,7 @@ class Layers():
 			for z in xrange(self.depth):
 				yield self.layers[z]
 		else:
-			yield self.layers[z1]
+			yield self.layers[int(z1)]
 
 	def add_line(self, p1, p2, r, g):
 		x1, y1, z1 = p1
